@@ -22,7 +22,6 @@ const Page = async()=>{
 
     return (
         <>
-        <div>hi</div>
         <Dashboard />
         </>
     )
