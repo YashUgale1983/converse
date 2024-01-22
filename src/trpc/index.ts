@@ -75,7 +75,11 @@ export const appRouter = router({
         }
 
         return file;
-    })
+    }),
+    // getAllUsers: publicProcedure.query(async()=>{
+    //     const users = db.user.findMany();
+    //     return users;
+    // })
 });
 
 export type AppRouter = typeof appRouter;

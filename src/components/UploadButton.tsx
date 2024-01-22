@@ -7,7 +7,7 @@ import {Cloud, File} from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { Progress } from "./ui/progress";
-import { uploadToS3 } from "@/app/api/s3/core";
+import { uploadToS3 } from "@/lib/s3";
 import { trpc } from "@/app/_trpc/client";
 
 const UploadButton = ()=>{
@@ -84,20 +84,33 @@ const UploadDropZone = ()=>{
                     description: "File is too large",
                   })
             }
-            setIsUploading(true)
-            const progressInterval = startSimulatedProgress()
-            const data = await uploadToS3(file);
-            console.log("1 : ", data?.file_key, data?.file_name);
-            if (!data) {
-                return toast({
-                    variant: "destructive",
-                    title: "Uh oh! Something went wrong.",
-                    description: "Try again later...",
-                })    
-            } 
-            clearInterval(progressInterval)
-            setUploadProgress(100)
-            startPolling({ key: data.file_key });
+
+            const fileData = new FormData();
+            fileData.append('file', file);
+
+            const data = await fetch("/api/s3/uploadToS3",{
+                method: "POST",
+                body: fileData,
+            });
+            const users = await data.json()
+            console.log("here is the data received - ", users);
+            
+
+
+            // setIsUploading(true)
+            // const progressInterval = startSimulatedProgress()
+            // const data = await uploadToS3(file);
+            // console.log("1 : ", data?.file_key, data?.file_name);
+            // if (!data) {
+            //     return toast({
+            //         variant: "destructive",
+            //         title: "Uh oh! Something went wrong.",
+            //         description: "Try again later...",
+            //     })    
+            // } 
+            // clearInterval(progressInterval)
+            // setUploadProgress(100)
+            // startPolling({ key: data.file_key });
         }}>
             {({getRootProps, getInputProps, acceptedFiles})=>(
                 <div {...getRootProps()} className='border h-64 m-4 border-dashed border-gray-300 rounded-lg'>
