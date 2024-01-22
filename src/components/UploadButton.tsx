@@ -3,11 +3,10 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { Button } from "./ui/button";
 import Dropzone from "react-dropzone";
-import {Cloud, File} from "lucide-react";
+import {Cloud, File, Loader2} from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { Progress } from "./ui/progress";
-import { uploadToS3 } from "@/lib/s3";
 import { trpc } from "@/app/_trpc/client";
 
 const UploadButton = ()=>{
@@ -40,9 +39,7 @@ const UploadDropZone = ()=>{
 
     const {mutate: startPolling} = trpc.getFile.useMutation({
         onSuccess: (file)=>{
-            setInterval(() => {
-                router.push(`/dashboard/${file.key}`);
-            }, 5000);
+            router.push(`/dashboard/${file.id}`);
         },
         retry: true,
         retryDelay: 500
@@ -85,32 +82,29 @@ const UploadDropZone = ()=>{
                   })
             }
 
+            setIsUploading(true)
+            const progressInterval = startSimulatedProgress()
+
             const fileData = new FormData();
             fileData.append('file', file);
 
-            const data = await fetch("/api/s3/uploadToS3",{
+            const data = await fetch("/api/s3/upload",{
                 method: "POST",
                 body: fileData,
             });
-            const users = await data.json()
-            console.log("here is the data received - ", users);
+            const fileInfo = await data.json()
             
+            if (!fileInfo) {
+                return toast({
+                    variant: "destructive",
+                    title: "Uh oh! Something went wrong.",
+                    description: "Try again later...",
+                })   
+            }
 
-
-            // setIsUploading(true)
-            // const progressInterval = startSimulatedProgress()
-            // const data = await uploadToS3(file);
-            // console.log("1 : ", data?.file_key, data?.file_name);
-            // if (!data) {
-            //     return toast({
-            //         variant: "destructive",
-            //         title: "Uh oh! Something went wrong.",
-            //         description: "Try again later...",
-            //     })    
-            // } 
-            // clearInterval(progressInterval)
-            // setUploadProgress(100)
-            // startPolling({ key: data.file_key });
+            clearInterval(progressInterval)
+            setUploadProgress(100)
+            startPolling({ id: fileInfo.fileId });
         }}>
             {({getRootProps, getInputProps, acceptedFiles})=>(
                 <div {...getRootProps()} className='border h-64 m-4 border-dashed border-gray-300 rounded-lg'>
@@ -143,9 +137,23 @@ const UploadDropZone = ()=>{
                         ):  null }
 
                         {isUploading ? (
-                            <div className='w-full px-3 sm:px-0 mt-4 max-w-xs mx-auto'>
-                                <Progress value={uploadProgress} className="h-1 w-full bg-zinc-200"/>
-                            </div>
+                            <div className='w-[80%] mt-4 max-w-xs mx-auto'>
+                            <Progress
+                              indicatorColor={
+                                uploadProgress === 100
+                                  ? 'bg-green-500'
+                                  : ''
+                              }
+                              value={uploadProgress}
+                              className='h-1 w-full bg-zinc-200'
+                            />
+                            {uploadProgress === 100 ? (
+                              <div className='flex gap-1 items-center justify-center text-sm text-zinc-700 text-center pt-2'>
+                                <Loader2 className='h-3 w-3 animate-spin' />
+                                Redirecting...
+                              </div>
+                            ) : null}
+                          </div>
                         ): null}
 
                         <input {...getInputProps} type="file" id="dropzone-file" className="hidden" />

@@ -11,8 +11,9 @@ import { useState } from "react";
 import UploadButton from "./UploadButton";
 
 const Dashboard = () => {
+    console.log("in dashboard.tsx");
+    
     const [currentlyDeletingFile, setCurrentlyDeletingFile] = useState<string | null>(null)
-
     const { data: files, isLoading } = trpc.getUserFiles.useQuery();
 
     const utils = trpc.useUtils();

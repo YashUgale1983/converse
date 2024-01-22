@@ -23,10 +23,7 @@ const Page = async({params}: PageProps)=>{
             userId: user.id
         }
     })
-    if(!file) notFound();
-
-    // console.log(file);
-    
+    if(!file) notFound();    
 
     return(
         <div className='flex-1 justify-between flex flex-col h-[calc(100vh-3.5rem)]'>

@@ -59,27 +59,21 @@ export const appRouter = router({
             })
             return file;
     }),
-    getFile: privateProcedure.input(z.object({key: z.string()})).mutation(async({ctx, input})=>{
-        const userId = ctx.userId;
-        const file = await db.file.findFirst({
-            where: {
-                key: input.key,
-                userId
+    getFile: privateProcedure
+        .input(z.object({id: z.string()}))
+        .mutation(async({ctx, input})=>{
+            const userId = ctx.userId;
+            const file = await db.file.findFirst({
+                where: {
+                    id: input.id,
+                    userId
+                }
+            })
+            if(!file){
+                throw new TRPCError({code: "NOT_FOUND"})
             }
-        })
-        console.log("id: ",file?.id);
-        console.log("key: ",file?.key);
-    
-        if(!file){
-            throw new TRPCError({code: "NOT_FOUND"})
-        }
-
-        return file;
+            return file;
     }),
-    // getAllUsers: publicProcedure.query(async()=>{
-    //     const users = db.user.findMany();
-    //     return users;
-    // })
 });
 
 export type AppRouter = typeof appRouter;
